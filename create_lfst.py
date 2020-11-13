@@ -1,5 +1,5 @@
 import plac
-from fast import WrappedFst
+from wrappedfst import WrappedFst
 from loguru import logger
 
 
