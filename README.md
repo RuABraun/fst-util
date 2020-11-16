@@ -8,6 +8,8 @@ Will be various python scripts that use the wrapper to do convenient things.
 
 In lib you need a symlink to a copy of the pybind11 repository.
 
+To install copy the `.so` to your sites directory, you can find it by calling `python -m site`.
+
 To use your `LD_LIBRARY_PATH` needs to have the path to the openfst libraries.
 
 ```
