@@ -111,7 +111,9 @@ public:
 
   void Insert(const int olabel, WrappedFst* fst);
 
-  void ReplaceSingle(const int olabel, WrappedFst* fst);
+  void ReplaceSingle(const int olabel, WrappedFst* fst, double weight=0.);
+
+  void ReplaceSingleLooped(const int olabel, WrappedFst* fst);
 
   void AddBoost(std::vector< std::vector<int>> word_subwords, double boost, int disambig, int unk);
 

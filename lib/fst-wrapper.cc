@@ -192,8 +192,76 @@ void WrappedFst::Insert(const int olabel, WrappedFst* fst) {
   }
 }
 
-void WrappedFst::ReplaceSingle(const int olabel, WrappedFst* fst) {
+void WrappedFst::ReplaceSingle(const int olabel, WrappedFst* fst, double weight) {
+  // If weight is zero will use unk weight
   // Assumes arcs with olabel all go to the same state
+  int destination_state = -1;
+  std::vector<std::pair<int, Arc>> arcs_to_replace;
+  for (int state: this->States()) {
+    std::vector<Arc> arcs = this->GetArcs(state);
+    std::vector<Arc> arcs_to_keep;
+    Arc arc_to_replace;
+    arcs_to_keep.reserve(arcs.size());
+    bool delete_arcs = false;
+    for (Arc arc: arcs) {
+      if (arc.olabel == olabel) {
+        delete_arcs = true;
+        arc_to_replace = arc;
+      } else {
+        arcs_to_keep.push_back(arc);
+      }
+    }
+
+    if (delete_arcs) {
+      DeleteArcs(state);
+      for (Arc arc: arcs_to_keep) {
+        AddArc(state, arc.nextstate, arc.ilabel, arc.olabel, arc.weight);
+      }
+      if (destination_state == -1) {
+        destination_state = arc_to_replace.nextstate;
+      } else if (destination_state != arc_to_replace.nextstate) {
+        std::cerr << "Assumption broken! " << destination_state<< " "<<arc_to_replace.nextstate<<std::endl;
+      }
+      if (state != arc_to_replace.nextstate) {
+        arcs_to_replace.emplace_back(state, arc_to_replace);
+      }
+
+    }
+  }
+
+  int offset = this->NumStates();
+  int start_state = -1;
+  std::vector<int> finals;
+  int sub_start_state = fst->GetStart();
+  for (int substate: fst->States()) {
+    int n = this->AddState();
+    if (substate == sub_start_state) start_state = n;
+    if (fst->isFinal(substate)) {
+      finals.push_back(substate);
+    }
+  }
+  if (start_state == -1) throw "WTF!";
+
+  for (std::pair<int, Arc> pair: arcs_to_replace) {
+    int state = pair.first;
+    Arc arc = pair.second;
+    double new_weight = weight == 0. ? arc.weight + 2.3 : weight;
+    this->AddArc(state, start_state, 0, 0, new_weight);
+  }
+  for (int substate: fst->States()) {
+    for (Arc arc: fst->GetArcs(substate)) {
+      this->AddArc(substate + offset, arc.nextstate + offset, arc.ilabel, arc.olabel, 0.);
+    }
+  }
+
+  for (int final: finals) {
+    this->AddArc(final + offset, destination_state, 0, 0, 0);
+  }
+}
+
+
+void WrappedFst::ReplaceSingleLooped(const int olabel, WrappedFst* fst) {
+  // Assumes arcs with olabel all go to the same state, works on FST with self loops.
   int destination_state = -1;
   std::vector<std::pair<int, Arc>> arcs_to_replace;
   for (int state: this->States()) {
@@ -246,9 +314,16 @@ void WrappedFst::ReplaceSingle(const int olabel, WrappedFst* fst) {
     Arc arc = pair.second;
     this->AddArc(state, start_state, 0, 0, arc.weight + 2.3);
   }
+
+  // To keep track of which states we've added self loops to
+  std::unordered_set<int> sl_added;
   for (int substate: fst->States()) {
     for (Arc arc: fst->GetArcs(substate)) {
-      this->AddArc(substate + offset, arc.nextstate + offset, arc.ilabel, arc.olabel, 0.);
+      this->AddArc(substate + offset, arc.nextstate + offset, arc.ilabel, arc.olabel, 0.69);
+      if (arc.ilabel != 0 && sl_added.find(arc.nextstate+offset) == sl_added.end()) {
+        this->AddArc(arc.nextstate + offset, arc.nextstate + offset, arc.ilabel, 0, 0.69);
+        sl_added.insert(arc.nextstate + offset);
+      }
     }
   }
 
@@ -471,7 +546,8 @@ PYBIND11_MODULE(wrappedfst, m) {
     .def("num_states", &WrappedFst::NumStates)
     .def("num_arcs", &WrappedFst::NumArcs)
     .def("insert", &WrappedFst::Insert)
-    .def("replace_single", &WrappedFst::ReplaceSingle)
+    .def("replace_single", &WrappedFst::ReplaceSingle, py::arg("olabel"), py::arg("fst"), py::arg("weight")=0.)
+    .def("replace_single_looped", &WrappedFst::ReplaceSingleLooped)
     .def("add_boost", &WrappedFst::AddBoost)
     .def("normalise_weights", &WrappedFst::NormaliseWeights)
     .def("copy", &WrappedFst::Copy,  py::return_value_policy::take_ownership)
