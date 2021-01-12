@@ -522,6 +522,7 @@ PYBIND11_MODULE(wrappedfst, m) {
   py::class_<WrappedFst>(m, "WrappedFst")
     .def(py::init<>())
     .def(py::init<std::string>())
+    .def(py::init<const WrappedFst>())
     .def("read", &WrappedFst::Read)
     .def("write", &WrappedFst::Write)
     .def("write_ark_entry", &WrappedFst::WriteArkEntry)
