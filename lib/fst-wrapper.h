@@ -109,6 +109,8 @@ public:
 
   WrappedFst* Copy() const;
 
+  void ReplaceSimple(const int olabel, std::vector<int> wordlist);
+
   void Insert(const int olabel, WrappedFst* fst);
 
   void ReplaceSingle(const int olabel, WrappedFst* fst, double weight=0.);

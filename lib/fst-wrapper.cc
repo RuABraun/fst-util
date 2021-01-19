@@ -141,6 +141,36 @@ int WrappedFst::NumArcs(int state) const {
   return fst_->NumArcs(state);
 }
 
+void WrappedFst::ReplaceSimple(const int olabel, std::vector<int> wordlist) {
+  for (int state: this->States()) {
+    std::vector<Arc> arcs = this->GetArcs(state);
+    std::vector<Arc> arcs_to_keep;
+    Arc arc_to_replace;
+    arcs_to_keep.reserve(arcs.size());
+    bool delete_arcs = false;
+    for (Arc arc: arcs) {
+      if (arc.olabel == olabel) {
+        delete_arcs = true;
+        arc_to_replace = arc;
+      } else {
+        arcs_to_keep.push_back(arc);
+      }
+    }
+
+    if (delete_arcs) {
+      this->DeleteArcs(state);
+      for (Arc arc: arcs_to_keep) {
+        this->AddArc(state, arc.nextstate, arc.ilabel, arc.olabel, arc.weight);
+      }
+
+      for (int word: wordlist) {
+        this->AddArc(state, arc_to_replace.nextstate, word, olabel, arc_to_replace.weight);
+      }
+    }
+  }
+}
+
+
 void WrappedFst::Insert(const int olabel, WrappedFst* fst) {
   for (int state: this->States()) {
     std::vector<Arc> arcs = this->GetArcs(state);
@@ -546,6 +576,7 @@ PYBIND11_MODULE(wrappedfst, m) {
     .def("delete_states", &WrappedFst::DeleteStates)
     .def("num_states", &WrappedFst::NumStates)
     .def("num_arcs", &WrappedFst::NumArcs)
+    .def("replace_simple", &WrappedFst::ReplaceSimple)
     .def("insert", &WrappedFst::Insert)
     .def("replace_single", &WrappedFst::ReplaceSingle, py::arg("olabel"), py::arg("fst"), py::arg("weight")=0.)
     .def("replace_single_looped", &WrappedFst::ReplaceSingleLooped)
