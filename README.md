@@ -6,7 +6,8 @@ Will be various python scripts that use the wrapper to do convenient things.
 
 # Usage
 
-In lib you need a symlink to a copy of the pybind11 repository.
+In lib you need a symlink to a copy of the pybind11 repository. Then modify `CMakeLists.txt` by setting the correct paths
+to include/ (you might also have to include the openfst root dir) and where the libfst\* files are.
 
 `mkdir build && cmake .. && make`
 
