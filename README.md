@@ -17,5 +17,6 @@ To use your `LD_LIBRARY_PATH` needs to have the path to the openfst libraries.
 
 ```
 from wrappedfst import WrappedFst
-# do cool stuff
+
+# do cool stuff, see bottom of lib/fst-wrapper.cc for available methods 
 ```
