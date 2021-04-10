@@ -55,6 +55,15 @@ void WrappedFst::AddArc(int start_state, int next_state, int ilabel, int olabel,
   fst_->AddArc(start_state, arcc);
 }
 
+int WrappedFst::AddArcState(int start_state, int ilabel, int olabel, double weight) {
+  int next_state = this->AddState();
+  fst::TropicalWeight w(weight);
+  fst::StdArc arc(ilabel, olabel, w, next_state);
+  fst::script::ArcClass arcc(arc);
+  fst_->AddArc(start_state, arcc);
+  return next_state;
+}
+
 int WrappedFst::GetStart() const {
   return fst_->Start();
 }
@@ -561,6 +570,7 @@ PYBIND11_MODULE(wrappedfst, m) {
     .def("set_start", &WrappedFst::SetStart)
     .def("set_final", &WrappedFst::SetFinal, py::arg("state"),py::arg("weight")=0.)
     .def("add_arc", &WrappedFst::AddArc)
+    .def("add_arcstate", &WrappedFst::AddArcState)
     .def("get_start", &WrappedFst::GetStart)
     .def("get_arcs", &WrappedFst::GetArcs)
     .def("determinize", &WrappedFst::Determinize)

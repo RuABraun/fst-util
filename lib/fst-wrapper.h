@@ -53,6 +53,8 @@ public:
 
   void AddArc(int start_state, int next_state, int ilabel, int olabel, double weight);
 
+  int AddArcState(int start_state, int ilabel, int olabel, double weight);
+
   void Read(std::string fst_fpath);
 
   static std::vector<std::pair<std::string, WrappedFst*>> ReadArkEntries(std::string fst_fpath) {
