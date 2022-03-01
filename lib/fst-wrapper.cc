@@ -1,4 +1,5 @@
 #include "fst/script/fstscript.h"
+#include <ctime>
 #include "fst/script/arcsort.h"
 #include "fst-wrapper.h"
 #include <pybind11/pybind11.h>
@@ -386,7 +387,7 @@ WrappedFst* WrappedFst::Copy() const {
   WrappedFst* f = new WrappedFst;
   for (int state: this->States()) {
     f->AddState();
-    if (this->Final(state) == 0.) {
+    if (this->isFinal(state)) {
       f->SetFinal(state);
     }
   }
@@ -397,6 +398,26 @@ WrappedFst* WrappedFst::Copy() const {
   }
   f->SetStart(this->GetStart());
   return f;
+}
+
+
+std::vector< std::vector<int>> WrappedFst::RandPath(int n) const {
+  srand((unsigned)time(0));
+  std::vector< std::vector<int>> lst(n);
+  for (int k = 0; k < n; ++k) {
+      int state = this->GetStart();
+      std::vector<int> labels;
+      double num = this->Final(state);
+      while (!this->isFinal(state)) {
+        std::vector<Arc> arcs = this->GetArcs(state);
+        int i = rand() % arcs.size();
+        Arc arc = arcs[i];
+        labels.push_back(arc.olabel);
+        state = arc.nextstate;
+      }
+      lst[k] = labels;
+  }
+  return lst;
 }
 
 
@@ -593,6 +614,7 @@ PYBIND11_MODULE(wrappedfst, m) {
     .def("add_boost", &WrappedFst::AddBoost)
     .def("normalise_weights", &WrappedFst::NormaliseWeights)
     .def("copy", &WrappedFst::Copy,  py::return_value_policy::take_ownership)
+    .def("randpath", &WrappedFst::RandPath)
     .def(py::pickle(
       [](const WrappedFst& f) {
         int num_states = f.NumStates();

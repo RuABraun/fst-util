@@ -65,7 +65,11 @@ def create_lca(syms, dct_isyms):
             sym = int(sym)
             fst.add_arc(state, newstate, sym, sym, 0.)
         else:
-            fst.add_arc(state, newstate, dct_isyms[sym], dct_isyms[sym], 0.)
+            if sym in dct_isyms:
+                fst.add_arc(state, newstate, dct_isyms[sym], dct_isyms[sym], 0.)
+            else:
+                unkid = dct_isyms['<unk>']
+                fst.add_arc(state, newstate, unkid, unkid, 0.)
 
         state = newstate
     fst.set_final(state)
@@ -99,7 +103,7 @@ def main(inf: "Path to file with input symbols",
          ismultiple: ('Multiple paths in FST', 'flag', None) = False,
          index_offset: ('', 'option', None, int) = 0,
          cost: ('', 'option', None, float) = 0.):
-    """ Create linear chain automata 
+    """ Create linear chain automata
     Three modes:
         1. Creates a single LCA from a single sequence.
         2. Creates a "comb", multiple arc sequences from a single start and end state.

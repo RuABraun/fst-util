@@ -111,6 +111,8 @@ public:
 
   WrappedFst* Copy() const;
 
+  std::vector< std::vector<int>> RandPath(int n) const;
+
   void ReplaceSimple(const int olabel, std::vector<int> wordlist);
 
   void Insert(const int olabel, WrappedFst* fst);
